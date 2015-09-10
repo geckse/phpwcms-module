@@ -1,2 +1,2 @@
 # phpwcms-module
-Extensions for phpwcms by Oliver Georgi
+Extensions for phpwcms developed by Oliver Georgi.
