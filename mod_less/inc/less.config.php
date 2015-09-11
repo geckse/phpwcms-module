@@ -6,7 +6,7 @@
   'lastComp' => 0,
   'actualRev' => '0',
   'actualSubRev' => '1',
-  'cssname' => 'style',
+  'cssname' => 'compiled',
   'compFiles' => 
   array (
   ),

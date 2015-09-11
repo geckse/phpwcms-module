@@ -1,4 +1,0 @@
-AUTOCOMP:true;
-REVISION:true;
-DOMIN:false;
-CSSNAME:style;

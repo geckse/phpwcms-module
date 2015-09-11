@@ -16,7 +16,6 @@ if (!defined('PHPWCMS_ROOT')) {
 		
 	// really need my functions.
 	include_once($phpwcms['modules'][$module]['path'].'inc/backend.functions.php');
-	$BE['HEADER']['jquery'] = '<script src="//code.jquery.com/jquery-1.11.3.min.js"></script>';
 
 	// load special backend CSS
 	$BE['HEADER']['be_default_style.css'] = '<link href="'.$phpwcms['modules'][$module]['dir'].'inc/css/be_default_style.css" rel="stylesheet" type="text/css" />';
