@@ -132,7 +132,7 @@ function less_compile_list($list,$onlybackup = false){
 			$mes .= "less-file: $file not found. <strong>Skiped</strong> in compiling.<br>";
 		}
 	}
-	
+	$do_revision = true;
 	$pathtocss = PHPWCMS_TEMPLATE.'inc_css/';
 	$wannadir = $modpath."revisions/v_".get_actual_rev()."_".get_actual_subrev()."/";
 
@@ -140,10 +140,11 @@ function less_compile_list($list,$onlybackup = false){
 		$cssname = $config['cssName'];
 		if(!$cssname) $cssname = "outputstyles.css";
 
-
+	
 	if (!file_exists($wannadir) && !is_dir($wannadir)) {
 		if (!mkdir ($wannadir,0775)){
-			die("Could not create dir in modules_less/revisions/. Please check the folder-permissions .");
+			$mes .= "ERROR: Could not create dir in modules_less/revisions/. Please check the folder-permissions.\n";
+			$do_revision = false;
 		}
 	}	
 
@@ -152,45 +153,65 @@ function less_compile_list($list,$onlybackup = false){
 		$newCSS = trim($pathtocss.$cssname.".css");
 		$buCSS = trim($wannadir.$cssname.".css");
 			
-		if(!file_exists($newCSS)){
-			 $handle = fopen($newCSS, 'w') or die('Cannot write css-file. Check the folder-permissions. Check: inc_css');
+		if(!file_exists($newCSS) && $do_revision){
+			 if($handle = fopen($newCSS, 'w')){ 
 			 fclose($handle);
+			 } else {
+				 $mes .= 'ERROR: Cannot write css-file. Check the folder-permissions.\n Check: inc_css';
+				 $do_revision = false;
+			 }
 		}		
 		
-		if(!file_put_contents($newCSS, $collected_css)) $mes .= " ^-- ERROR: could not write in new CSS-file.<br>";	
+		if(!file_put_contents($newCSS, $collected_css) && $do_revision) $mes .= " ^-- ERROR: could not write in new CSS-file.<br>";	
 		
-		if(!file_exists($buCSS)){
-			 $handle = fopen($buCSS, 'w') or die("Could write dir modules_less/revisions/. Please check the folder-permissions .");
-			 fclose($handle);
+		if(!file_exists($buCSS) && $do_revision){
+			 if($handle = fopen($buCSS, 'w')){
+			 	fclose($handle);
+			  } else {
+			  	$mes .= "ERROR: Could not create dir in modules_less/revisions/. Please check the folder-permissions.\n";
+			  	$do_revision = false;
+			  }
 		}		
 
-		if(!file_exists($wannadir."revdata.txt")){
-			 $handle = fopen($wannadir."revdata.txt", 'w') or die("Could write dir modules_less/revisions/. Please check the folder-permissions .");
-			 fclose($handle);
+		if(!file_exists($wannadir."revdata.txt") && $do_revision){
+			 if($handle = fopen($wannadir."revdata.txt", 'w')){ 
+			 	fclose($handle);
+			 } else {
+			 	$mes .= "ERROR: Could not create dir in modules_less/revisions/. Please check the folder-permissions.\n";
+			 	$do_revision = false;
+			 }
 		}
 		
 		$revdata = "v_".get_actual_rev()."_".get_actual_subrev().";\n";
 		$revdata .= "TIME:".time().";";
 		
-		if(!file_put_contents($wannadir."revdata.txt", $revdata)) $mes .= " ^-- ERROR: could not write in new rev-data-file.<br>";			
+		if(!file_put_contents($wannadir."revdata.txt", $revdata) && $do_revision) $mes .= " ^-- ERROR: could not write in new rev-data-file.<br>";			
 		
 		
-		if(!file_put_contents($buCSS, $collected_css)) $mes .= " ^-- ERROR: could not write in new Backup-CSS-file.<br>";			
+		if(!file_put_contents($buCSS, $collected_css) && $do_revision) $mes .= " ^-- ERROR: could not write in new Backup-CSS-file.<br>";			
 		
 		for($i = 0; $i < count($buLESS); $i++){
 			$lessbu = $buLESS[$i];
 			$lessbu_file = $wannadir.$lessbu['name'];
 			
-			if(!file_exists($lessbu_file)){
-				 $handle = fopen($lessbu_file, 'w') or die("Could write dir modules_less/revisions/. Please check the folder-permissions .");
-				 fclose($handle);
+			if(!file_exists($lessbu_file) && $do_revision){
+				 if($handle = fopen($lessbu_file, 'w')){
+					fclose($handle);
+				  } else {
+				  	$mes .= "Could not create dir in modules_less/revisions/. Please check the folder-permissions.\n";
+				 }
 			}
-			if(!file_put_contents($lessbu_file, $lessbu['less'] )) $mes .= " ^-- ERROR: could not write in new Backup-less-file.<br>";			
+			if(!file_put_contents($lessbu_file, $lessbu['less'] && $do_revision) && $do_revision) $mes .= " ^-- ERROR: could not write in new Backup-less-file.<br>";			
 					
 		}
 		
-		if(strlen($collected_css) > 0) $mes .= "<br><strong>DONE:</strong> $cssname created / updated. Backup (v_".get_actual_rev()."_".get_actual_subrev().") $cssname created / updated.";	
-		
+		if(strlen($collected_css) > 0){ $mes .= "<br><strong>DONE:</strong> $cssname.css created / updated. ";
+			if($do_revision){
+				 $mes .= "Backup (v_".get_actual_rev()."_".get_actual_subrev().") $cssname.css created / updated.";	
+			} else {
+				$mes .= "Backup-creation failed.";
+			}	 
+		}
 		
 		$logfile = $modpath.'log/log.txt'; 
 		file_put_contents($logfile, str_replace('<br>',"\n",$mes));
@@ -268,6 +289,9 @@ function higher_actual_subrev(){
 function revision_list(){
 	$output = "<div class='list_box'><div class='ac_row theader'><div class='ac_a_title'>Version</div><div class='ac_a_title'>Datum</div><div class='ac_a_title'>Aktion</div></div>";
 	$dir = dirname(__DIR__).'/revisions/';
+	
+	if(!file_exists($dir)) return '<i>No Revision-Folder found.</i>';
+	
 	$dirs = scandir($dir, 1);
 	
 	foreach($dirs as $subdir){

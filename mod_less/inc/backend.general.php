@@ -31,12 +31,7 @@ if (!defined('PHPWCMS_ROOT')) {
 			$log .= "<br><strong>New Snapshot saved!</strong>";
 					
 	}
-	
-?>	
-
-
-	<section class="be_container">
-		
+?>		
 		<h2><?php echo $BLM['be_nav_general']; ?></h2>
 		<?php
 		if(count($lessfiles) <= 0) echo '<div class="warnbox">Could not find a .less-file in template/inc_css/.</div>';

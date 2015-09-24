@@ -1,0 +1,5 @@
+0.91
+====
+* No 'die' for failed revision creation, error will be displayed in log
++ Error-Notice in Backend
+* CSS-Compiling without Backup possible (fallback)

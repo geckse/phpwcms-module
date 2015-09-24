@@ -21,6 +21,6 @@ $_module_fe_init		= true;
 $_module_fe_search		= false;
 $_module_fe_setting		= false;
 
-$_module_less_version = "0.9"; 
+$_module_less_version = "0.91"; 
 
 ?>

@@ -13,7 +13,8 @@ if (!defined('PHPWCMS_ROOT')) {
 
 	// put translation back to have easier access to it - use it as relation
 	$BLM = & $BL['modules'][$module];
-		
+	$modpath = $phpwcms['modules']['less']['path'];
+				
 	// really need my functions.
 	include_once($phpwcms['modules'][$module]['path'].'inc/backend.functions.php');
 
@@ -31,6 +32,14 @@ if (!defined('PHPWCMS_ROOT')) {
 	echo "<h2>less-Compiler</h2>";
 	echo '<div id="version">Modul "less-compiler"-version: '.$_module_less_version.'</div>';
 	echo '</section>';
+
+	if(strstr(file_get_contents($modpath.'log/log.txt'),'ERROR:')){
+		echo '<section class="be_container">';
+		echo "<div class=\"warnbox\"><h2>An error occurred</h2>";
+		echo 'Please check the Log for further informations.';
+		echo '</div></section>';
+	}
+
 	$action = '';
 	
 	if(isset($_GET['mode'])) 
@@ -49,7 +58,7 @@ if (!defined('PHPWCMS_ROOT')) {
 		  }	 
 		} 
 
-
+	
 	echo less_be_nav($action);	
 
 	if(!$action || $action == "board"){
