@@ -38,7 +38,7 @@ function less_be_nav($action){
 /* --- save a less group --- */
 function less_save_group($id = 0, $name = "", $cssname = "", $lessfiles = "", $options){
 	
-	if (!mysql_fetch_row(mysql_query('SHOW TABLES FROM ' . $GLOBALS['phpwcms']['db_table'] . ' LIKE "%phpwcms_mod_less_groups"'))) return false;
+	if (!less_checkinstall()) return false;
 	
 	$optionsstr = "";
 	foreach($options as $ref => $val){
@@ -71,7 +71,8 @@ function less_save_group($id = 0, $name = "", $cssname = "", $lessfiles = "", $o
 /* --- save a less group --- */
 function less_delete_group($id = 0){
 	
-	if (!mysql_fetch_row(mysql_query('SHOW TABLES FROM ' . $GLOBALS['phpwcms']['db_table'] . ' LIKE "%phpwcms_mod_less_groups"'))) return false;
+	if (!less_checkinstall()) return false;
+	
 	$sql = "DELETE FROM `".DB_PREPEND."phpwcms_mod_less_groups` WHERE `id` = $id";
 	@_dbQuery($sql);	
 	return true;  	
@@ -254,7 +255,7 @@ function CallToCompileLess(){
 
 /* ---- module installed? ----- */
 function less_checkinstall(){
-	if(!mysql_fetch_row(mysql_query('SHOW TABLES FROM ' . $GLOBALS['phpwcms']['db_table'] . ' LIKE "%'.DB_PREPEND.'phpwcms_mod_less_groups"'))){
+	if(!mysql_fetch_row(mysql_query('SHOW TABLES FROM `' . $GLOBALS['phpwcms']['db_table'] . '` LIKE "%'.DB_PREPEND.'phpwcms_mod_less_groups"'))){
 		return false;
 	} else {
 		return true;
