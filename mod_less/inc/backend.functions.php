@@ -18,7 +18,7 @@ function less_be_nav($action){
 
 	$isactive = "";
 	if($action == "revisions") $isactive = " active";
-	$output .= "<div class='be_men $isactive'><a href=\"phpwcms.php?do=modules&module=less&mode=revisions\">".$BLM['be_nav_rev']."</a></div>";
+	//$output .= "<div class='be_men $isactive'><a href=\"phpwcms.php?do=modules&module=less&mode=revisions\">".$BLM['be_nav_rev']."</a></div>";
 
 	$isactive = "";
 	if($action == "log") $isactive = " active";
@@ -35,316 +35,231 @@ function less_be_nav($action){
 	return $output;
 }	
 
-/* ---- config functions ------ */
-
-
-// read config (returns array)
-function less_getconfig(){
+/* --- save a less group --- */
+function less_save_group($id = 0, $name = "", $cssname = "", $lessfiles = "", $options){
 	
-	$configfile = __DIR__.'/less.config.php';
+	if (!mysql_fetch_row(mysql_query('SHOW TABLES FROM ' . $GLOBALS['phpwcms']['db_table'] . ' LIKE "%phpwcms_mod_less_groups"'))) return false;
 	
-	$config = include $configfile;
-	
-	return $config;
-}
-
-function less_setconfig($index,$value){
-	
-	$configfile = __DIR__.'/less.config.php';
-	
-	$config = include $configfile;
-	
-	$config[$index] = $value;
-	file_put_contents($configfile, '<?php return ' . var_export($config, true) . ';');
-	return $value;
-}
-
-
-function less_getlastcomp(){
-	
-	$configfile = __DIR__.'/less.config.php';
-	
-	$data = include $configfile;
-	
-	return $data['lastComp'];
-}
-
-function less_setlastcomp(){
-	return(less_setconfig('lastComp',time()));
-}
-
-
-/* ---- compiling -------- */
-
-function CallToCompileLess($fe_init = false){
-	global $phpwcms;
-	require_once $phpwcms['modules']['less']['path'].'inc/Less/Autoloader.php';
-	Less_Autoloader::register();
-	
-	$config = less_getconfig();
-	
-	if($config['autoComp'] != "true") return false;
-	
-	$lasttime = less_getlastcomp();
-		
-	if($config['revision'] == "true" && $fe_init && time()-$lasttime >= (60 * 60 * 2)){
-		higher_actual_subrev();
+	$optionsstr = "";
+	foreach($options as $ref => $val){
+		$optionsstr .= $ref.':'.($val ? 1 : 0).';';
 	}
 	
-	$activefiles = less_getconfig()['compFiles'];
-
-	
-	$lessfiles = array_map('basename', glob(PHPWCMS_TEMPLATE.'inc_css/*.less')); 
-	$activefiles = less_getconfig()['compFiles'];
-	
-	if(!sizeof($activefiles)){
-		less_compile_list($lessfiles);	
+	// create
+   	if(!$id || $id <= 0){		
+		$sql = "INSERT INTO `".DB_PREPEND."phpwcms_mod_less_groups` SET
+		`groupname`='".mysql_real_escape_string($name)."',
+		`cssname`='".mysql_real_escape_string($cssname)."',
+		`lessfiles`='".mysql_real_escape_string($lessfiles)."',
+		`options`='".mysql_real_escape_string($optionsstr)."',
+		`last_compile`='".date('Y-m-d H:i:s')."',
+		`major_revision`=0,
+		`minor_revision`=1
+		";	
 	} else {
-		less_compile_list($activefiles);	
+		$sql = "UPDATE `".DB_PREPEND."phpwcms_mod_less_groups` SET
+		`groupname`='".mysql_real_escape_string($name)."',
+		`cssname`='".mysql_real_escape_string($cssname)."',
+		`lessfiles`='".mysql_real_escape_string($lessfiles)."',
+		`options`='".mysql_real_escape_string($optionsstr)."'
+		WHERE `id`=".intval($id);
 	}
-	return true;
+	@_dbQuery($sql);	
+	
+	return true;  	
+}
+/* --- save a less group --- */
+function less_delete_group($id = 0){
+	
+	if (!mysql_fetch_row(mysql_query('SHOW TABLES FROM ' . $GLOBALS['phpwcms']['db_table'] . ' LIKE "%phpwcms_mod_less_groups"'))) return false;
+	$sql = "DELETE FROM `".DB_PREPEND."phpwcms_mod_less_groups` WHERE `id` = $id";
+	@_dbQuery($sql);	
+	return true;  	
+}
+
+/* --- loading less groups --- */
+function less_load_groups(){
+	
+	$output = array(0 => false);
+	
+	$sql = "SELECT * FROM  `".DB_PREPEND."phpwcms_mod_less_groups`";
+	$rows = @_dbQuery($sql);
+	
+	foreach($rows as $result){
+		$output[] = array(
+			'name' => $result['groupname'],
+			'id' => $result['id'],
+			'cssname' => $result['cssname'],
+			'autocomp' => ((strpos($result['options'],'autocomp:1') !== false) ? true : false),
+			'autochange' => ((strpos($result['options'],'autochange:1') !== false) ? true : false),
+			'domin' => ((strpos($result['options'],'domin:1') !== false) ? true : false),
+			'lessfiles' => $result['lessfiles'],
+			'lastcomp' => $result['last_compile']
+		);
+	}
+	return $output;
+}
+
+/* --- loading less groups --- */
+function less_load_group($id = 0){
+	
+	$output = array(0 => false);
+	
+	$sql = "SELECT * FROM  `".DB_PREPEND."phpwcms_mod_less_groups` WHERE id=$id";
+	$rows = @_dbQuery($sql);
+	
+	foreach($rows as $result){
+		$output[] = array(
+			'name' => $result['groupname'],
+			'id' => $result['id'],
+			'cssname' => $result['cssname'],
+			'autocomp' => ((strpos($result['options'],'autocomp:1') !== false) ? true : false),
+			'autochange' => ((strpos($result['options'],'autochange:1') !== false) ? true : false),
+			'domin' => ((strpos($result['options'],'domin:1') !== false) ? true : false),
+			'lessfiles' => $result['lessfiles']
+		);
+	}
+	return $output;
 }
 
 
-
-function less_compile_list($list,$onlybackup = false){
-	
-	$mes = "";
-	$buLESS = array();
-	$collected_css = "";
+/* ---- compile ----- */
+function less_compile_group($id = 0){
 	global $phpwcms;
-	$modpath = $phpwcms['modules']['less']['path'];
+	global $modpath;
+	$group = less_load_group($id);
+	$group = $group[1];
 	
-	
-	file_put_contents($modpath.'log/less.txt', "");   		
-	
-	foreach($list as $file){
-	   if(file_exists(PHPWCMS_TEMPLATE.'inc_css/'.$file)){
-		    $mes .= "<strong>less-file:</strong> $file found.<br>";
-		    $state = less_compile($file, $onlybackup);
-			$mes .= $state[0];
-			$buLESS_ind = count($buLESS_ind);
-			$buLESS[$buLESS_ind]['name'] = $file;
-			$buLESS[$buLESS_ind]['less'] = file_get_contents(PHPWCMS_TEMPLATE.'inc_css/'.$file);
-			$collected_css .= $state[1]; 
-			if(strlen($state[1]) > 0) $mes .= " ^-- combining ...<br>";	 
+	if(isset($group['lessfiles']) && !empty($group['lessfiles'])){
+		
+		$files = explode(',',$group['lessfiles']);
+		$css = "";
+		$fileerror = "";
+		
+		foreach($files as $file){
+			
+			// file exists?
+			$filepath = "";
+			if(file_exists(PHPWCMS_TEMPLATE.'inc_css/'.$file)){
+				$filepath = PHPWCMS_TEMPLATE.'inc_css/'.$file;
+			} elseif(file_exists(PHPWCMS_TEMPLATE.'inc_less/'.$file)){
+				$filepath = PHPWCMS_TEMPLATE.'inc_less/'.$file;
+			} else {
+				$fileerror .= "File: $file not found.<br>";
+			} 
+			
+			// file found?
+			if($filepath != ""){
+				
+				
+				$options = array();	
+				if($group['domin']) $options = array( 'compress'=>true );
+				
+				try{	
+					$parser = new Less_Parser($options);
+					$parser->parseFile( $filepath, $phpwcms["site"]);
+					$css .= $parser->getCss();
+					file_put_contents($modpath.'log/'.str_replace('.less','',$file).'.txt', "");
+		    	
+				} 
+				catch(Exception $e) {
+		    		file_put_contents($modpath.'log/'.str_replace('.less','',$file).'.txt', "<strong>LESS-ERROR</strong>: (in $file)".PHP_EOL.$e->getMessage()."\n");
+		    		$fileerror .= "ERROR: less-syntax-error. See log for more information.<br>";
+				}	
+			}
+				
+		}
+				
+		// feedback or everything done?
+		if($fileerror != ""){
+			return $fileerror;
 		} else {
-			$mes .= "less-file: $file not found. <strong>Skiped</strong> in compiling.<br>";
-		}
-	}
-	$do_revision = true;
-	$pathtocss = PHPWCMS_TEMPLATE.'inc_css/';
-	$wannadir = $modpath."revisions/v_".get_actual_rev()."_".get_actual_subrev()."/";
-
-		$config = less_getconfig();
-		$cssname = $config['cssName'];
-		if(!$cssname) $cssname = "outputstyles.css";
-
-	
-	if (!file_exists($wannadir) && !is_dir($wannadir)) {
-		if (!mkdir ($wannadir,0775)){
-			$mes .= "ERROR: Could not create dir in modules_less/revisions/. Please check the folder-permissions.\n";
-			$do_revision = false;
-		}
-	}	
-
-	if(strlen($collected_css)){	
-		//	>_ 
-		$newCSS = trim($pathtocss.$cssname.".css");
-		$buCSS = trim($wannadir.$cssname.".css");
-			
-		if(!file_exists($newCSS) && $do_revision){
-			 if($handle = fopen($newCSS, 'w')){ 
-			 fclose($handle);
-			 } else {
-				 $mes .= 'ERROR: Cannot write css-file. Check the folder-permissions.\n Check: inc_css';
-				 $do_revision = false;
-			 }
-		}		
-		
-		if(!file_put_contents($newCSS, $collected_css) && $do_revision) $mes .= " ^-- ERROR: could not write in new CSS-file.<br>";	
-		
-		if(!file_exists($buCSS) && $do_revision){
-			 if($handle = fopen($buCSS, 'w')){
-			 	fclose($handle);
-			  } else {
-			  	$mes .= "ERROR: Could not create dir in modules_less/revisions/. Please check the folder-permissions.\n";
-			  	$do_revision = false;
-			  }
-		}		
-
-		if(!file_exists($wannadir."revdata.txt") && $do_revision){
-			 if($handle = fopen($wannadir."revdata.txt", 'w')){ 
-			 	fclose($handle);
-			 } else {
-			 	$mes .= "ERROR: Could not create dir in modules_less/revisions/. Please check the folder-permissions.\n";
-			 	$do_revision = false;
-			 }
-		}
-		
-		$revdata = "v_".get_actual_rev()."_".get_actual_subrev().";\n";
-		$revdata .= "TIME:".time().";";
-		
-		if(!file_put_contents($wannadir."revdata.txt", $revdata) && $do_revision) $mes .= " ^-- ERROR: could not write in new rev-data-file.<br>";			
-		
-		
-		if(!file_put_contents($buCSS, $collected_css) && $do_revision) $mes .= " ^-- ERROR: could not write in new Backup-CSS-file.<br>";			
-		
-		for($i = 0; $i < count($buLESS); $i++){
-			$lessbu = $buLESS[$i];
-			$lessbu_file = $wannadir.$lessbu['name'];
-			
-			if(!file_exists($lessbu_file) && $do_revision){
-				 if($handle = fopen($lessbu_file, 'w')){
-					fclose($handle);
-				  } else {
-				  	$mes .= "Could not create dir in modules_less/revisions/. Please check the folder-permissions.\n";
-				 }
-			}
-			if(!file_put_contents($lessbu_file, $lessbu['less'] && $do_revision) && $do_revision) $mes .= " ^-- ERROR: could not write in new Backup-less-file.<br>";			
+			// write css
+			if($css != ""){
+				$css = "/* ---  ".str_replace('.css','',$group['cssname'])." - compiled v.".date('Y-m-d H:i:s').' --- */'.PHP_EOL.$css;
+				
+				if(file_put_contents(PHPWCMS_TEMPLATE.'inc_css/'.$group['cssname'].'.css',$css)){
 					
-		}
-		
-		if(strlen($collected_css) > 0){ $mes .= "<br><strong>DONE:</strong> $cssname.css created / updated. ";
-			if($do_revision){
-				 $mes .= "Backup (v_".get_actual_rev()."_".get_actual_subrev().") $cssname.css created / updated.";	
+					$sql = "UPDATE `".DB_PREPEND."phpwcms_mod_less_groups` SET
+							`last_compile` = '".date('Y-m-d H:i:s')."' WHERE id=$id";
+					@_dbQuery($sql);
+					
+					$count = (_getConfig('less_counter') !== false ? intval(_getConfig('less_counter')) : 0);
+					_setConfig('less_counter', $count+1, 'module_less_compiler');
+					
+					return true;
+				} else {
+					return "Cannot write css file.";
+				}
+				
 			} else {
-				$mes .= "Backup-creation failed.";
-			}	 
-		}
-		
-		$logfile = $modpath.'log/log.txt'; 
-		file_put_contents($logfile, str_replace('<br>',"\n",$mes));
-		
-		
-	}
-	
-	less_setlastcomp();
-	
-	return $mes;
-	
-}
-
-function less_compile($lessname, $onlybackup){
-
-	global $phpwcms;
-	$modpath = $phpwcms['modules']['less']['path'];
-	$pathtocss = PHPWCMS_TEMPLATE.'inc_css/';
-	$revdir = 'inc/data/';
-	
-	$feedback = "";
-	
-	$config = less_getconfig();
-	$options = array();	
-	if($config['doMin'] == "true") $options = array( 'compress'=>true );
-	
-	
-	try{
-		
-		$parser = new Less_Parser($options);
-		$parser->parseFile( $pathtocss.$lessname, $phpwcms["site"]);
-		$css = $parser->getCss();
-    		$feedback = " ^-- collecting and compiling styles from $lessname ...<br>";		
-		} 
-		catch(Exception $e) {
-    		file_put_contents($modpath.'log/less.txt', "<strong>LESS-ERROR</strong>: (in $lessname)".$e->getMessage()."\n", FILE_APPEND);
-    		$feedback = " ^-- ERROR: less-error detected.<br>";
-		}	
-		
-		$ret = array($feedback,$css);
-		return($ret);		
-}
-
-/* ----- Revision-Management --------- */
-
-function get_actual_rev(){	
-	$configfile = __DIR__.'/less.config.php';
-	
-	$data = include $configfile;
-	
-	return(trim(intval($data['actualRev'])));
-}
-
-function higher_actual_rev(){
-	$configfile = __DIR__.'/less.config.php';
-	$data = include $configfile;
-	less_setconfig('actualSubRev',0);
-	less_setconfig('actualRev',$data['actualRev']+1);
-	return true;
-	
-}
-function get_actual_subrev(){	
-	$configfile = __DIR__.'/less.config.php';
-	$data = include $configfile;
-	return(trim(intval($data['actualSubRev'])));
-}
-
-function higher_actual_subrev(){
-	$configfile = __DIR__.'/less.config.php';
-	$data = include $configfile;
-	less_setconfig('actualSubRev',$data['actualSubRev']+1);
-	return true;	
-}
-
-function revision_list(){
-	$output = "<div class='list_box'><div class='ac_row theader'><div class='ac_a_title'>Version</div><div class='ac_a_title'>Datum</div><div class='ac_a_title'>Aktion</div></div>";
-	$dir = dirname(__DIR__).'/revisions/';
-	
-	if(!file_exists($dir)) return '<i>No Revision-Folder found.</i>';
-	
-	$dirs = scandir($dir, 1);
-	
-	foreach($dirs as $subdir){
-		if(strstr($subdir,'v_')){
-			
-			$isAct = "";
-			
-			if($subdir == 'v_'.get_actual_rev().'_'.get_actual_subrev()) $isAct = " active";
-			
-			$files = scandir($dir.$subdir,1); 
-			$data = explode(';',file_get_contents($dir.$subdir.'/'.$files[array_search('revdata.txt', $files)]));
-			$link = 'phpwcms.php?do=modules&module=less&mode=revisions';
-			$output .= "<div class='ac_row ".$isAct."'><div class='ac_a_title'>".str_replace('_','.',trim($data[0]))."</div><div class='ac_a_title'>".date('d.m.Y H:i:s',trim(str_replace('TIME:','',$data[1])))."</div><div class='ac_a_title'><a href='".$link."&revto=".$subdir."'>Wiederherstellen</a></div></div>";
-			  
-		}	 
-	}
-	
-	return $output.'</div>';
-}
-
-function use_rev($version){
-	global $phpwcms;
-	$modpath = $phpwcms['modules']['less']['path'];
-	$cv = explode('_',str_replace('v_', '', $version));
-	$pathtocss = PHPWCMS_TEMPLATE.'inc_css/';
-	$dir = $modpath."revisions/v_".$cv[0]."_".$cv[1]."/";
-	
-	$files = scandir($dir,1); 
-	
-	less_setconfig('actualRev',$cv[0]);
-	less_setconfig('actualSubRev',$cv[1]);
-	
-	$feedback = "<strong>Turning back to Version: ".$version."</strong><br />";
-			
-	foreach($files as $file){
-		if(pathinfo($dir.$file, PATHINFO_EXTENSION) == "css" || pathinfo($dir.$file, PATHINFO_EXTENSION) == "less"){
-			if(copy ($dir.$file, $pathtocss.$file)){
-				$feedback .= $file." moved to inc_css<br />";
-			} else {
-				$feedback .= $file." couldn't move to inc_css<br />";
+				return "Less-input results no css.";
 			}
 		}
-	}	
-	return $feedback;
+		
+	} else {
+		return "No less input selected.";
+	}
 }
 
+/* ---- fe init actions --- */
+function CallToCompileLess(){
+	global $modpath;
+	global $phpwcms;
+	$module = "less";
+	$modpath = dirname(__DIR__).'/'; 
+	
+	$groups = less_load_groups();	
+	$result = "";
+	
+	foreach($groups as $group){
+		if(isset($group['id']) && $group['id'] > 0){
+			if($group['autocomp']){
+				
+				require_once $phpwcms['modules'][$module]['path'].'inc/Less/Autoloader.php';
+				Less_Autoloader::register();
+	
+				$lesscomp = less_compile_group($group['id']);
+				if($lesscomp !== true) $result .= $lesscomp;
+				
+			} else if($group['autochange']) {
+				require_once $phpwcms['modules'][$module]['path'].'inc/Less/Autoloader.php';
+				Less_Autoloader::register();
+	
+				$reftime = strtotime($group['lastcomp']);
+				$files_changed = false;
+				$files = explode(',',$group['lessfiles']);
+				
+				foreach($files as $file){
+					if(file_exists(PHPWCMS_TEMPLATE.'inc_css/'.$file) && @filemtime(PHPWCMS_TEMPLATE.'inc_css/'.$file) > $reftime){
+						$files_changed = true;
+						break;
+					} elseif(file_exists(PHPWCMS_TEMPLATE.'inc_less/'.$file) && @filemtime(PHPWCMS_TEMPLATE.'inc_less/'.$file) > $reftime){
+						$files_changed = true;
+						break;					
+					} 
+				}
+				
+				if($files_changed){
+					$lesscomp = less_compile_group($group['id']);
+					if($lesscomp !== true) $result .= $lesscomp;
+				}
+				
+			}
+		}
+	}
+	file_put_contents($modpath.'log/log.txt', $result);
+	return true;
+}
 
-
-
-
-
-
-
+/* ---- module installed? ----- */
+function less_checkinstall(){
+	if(!mysql_fetch_row(mysql_query('SHOW TABLES FROM ' . $GLOBALS['phpwcms']['db_table'] . ' LIKE "%'.DB_PREPEND.'phpwcms_mod_less_groups"'))){
+		return false;
+	} else {
+		return true;
+	}
+}
 
 
 

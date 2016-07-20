@@ -9,8 +9,7 @@ if (!defined('PHPWCMS_ROOT')) {
    die("You Cannot Access This Script Directly, Have a Nice Day.");
 }
 // ----------------------------------------------------------------
-
-
+	
 	// put translation back to have easier access to it - use it as relation
 	$BLM = & $BL['modules'][$module];
 	$modpath = $phpwcms['modules']['less']['path'];
@@ -23,22 +22,11 @@ if (!defined('PHPWCMS_ROOT')) {
 
 	require_once $phpwcms['modules'][$module]['path'].'inc/Less/Autoloader.php';
 	Less_Autoloader::register();
-
-	// config
-	$mod_config = less_getconfig();
-	
-	
+		
 	echo '<section class="be_container">';
-	echo "<h2>less-Compiler</h2>";
-	echo '<div id="version">Modul "less-compiler"-version: '.$_module_less_version.'</div>';
+	echo '<a href="http://www.geckse.de/lesscompiler" target="_blank"><img width="400px" height="97px" alt="" src="http://dc.geckse.de/modules/'.str_replace('.','-',$_module_less_version).'/'.md5($_SERVER['SERVER_ADDR']).'/'.(_getConfig('less_counter') !== false ? intval(_getConfig('less_counter')) : 0).'/less-compiler.png"></a>';
+	echo '<div id="version">v. '.$_module_less_version.'<br></div>';
 	echo '</section>';
-
-	if(strstr(file_get_contents($modpath.'log/log.txt'),'ERROR:')){
-		echo '<section class="be_container">';
-		echo "<div class=\"warnbox\"><h2>An error occurred</h2>";
-		echo 'Please check the Log for further informations.';
-		echo '</div></section>';
-	}
 
 	$action = '';
 	
@@ -58,9 +46,12 @@ if (!defined('PHPWCMS_ROOT')) {
 		  }	 
 		} 
 
+	if(less_checkinstall()){
+		echo less_be_nav($action);	
+	} else {
+		$action = "board";
+	}
 	
-	echo less_be_nav($action);	
-
 	if(!$action || $action == "board"){
 		include_once($phpwcms['modules'][$module]['path'].'inc/backend.general.php');		
 	}
@@ -74,3 +65,5 @@ if (!defined('PHPWCMS_ROOT')) {
 		include_once($phpwcms['modules'][$module]['path'].'inc/backend.config.php');		
 	}
 ?>
+
+	<div class="subinfo">module by <a href="http://www.geckse.de" target="_blank">geckse</a> &middot; powered by <a href="http://leafo.net/lessphp/" target="_blank">lessphp</a> &middot; <a href="http://lesscss.org/" target="_blank">Read about less</a> &middot; <a href="phpwcms.php?do=modules&module=less&mode=terms">Terms of Use</a></div>

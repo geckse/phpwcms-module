@@ -8,6 +8,7 @@
 	top: 0;
 	right: 0;
 	color: rgba(0,0,0,0.3);
+	text-align: right;
 }
 
 /* ----- nav -------------------- */
@@ -209,8 +210,15 @@ filter: progid:DXImageTransform.Microsoft.gradient( startColorstr='#e8e8e8', end
 }
 
 .fiftybox {
+	overflow: hidden;
 	width: 50%;
 	float: left; clear: none;
+	box-sizing: border-box;
+}
+.fiftybox.lighter {
+	width: 50%;
+	padding-left: 1%;
+	padding-right: 1%;
 }
 .ninebox {
 	width: 96%;
@@ -260,6 +268,61 @@ input[type="checkbox"]{
 	border: 1px solid #BEC6C9;
 }
 
+/* --- builder ---- */
+#builder {
+	overflow: hidden;
+}
+#builder h3, #builder input {
+	display: inline-block;
+	margin: 0px;
+}
+#builder .row > h3 {
+	margin-left: 6px;
+}
+#builder .row {
+	position: relative;
+	overflow: hidden;
+	padding: 10px 4px;
+	background-color: rgba(0,0,0,0.06);
+	border: 1px solid #e6e6e6;
+	border-bottom: 1px solid #b7b7b7;
+
+}
+#builder .row:nth-child(even) {
+	background-color: rgba(0,0,0,0.03);
+}
+#builder .lessfiles {
+	width: 100%;
+	height: 105px;
+}
+#builder .css-name {
+	width: 100%;
+	box-sizing: border-box;
+}
+
+/* ---- setup ---- */
+#setup {
+	padding: 20px 30px;
+	margin: 40px;
+	background: rgb(255,255,255);
+	background: -moz-linear-gradient(top, rgba(255,255,255,1) 3%, rgba(244,255,232,1) 10%, rgba(244,255,232,1) 32%, rgba(250,252,247,1) 58%);
+	background: -webkit-linear-gradient(top, rgba(255,255,255,1) 3%,rgba(244,255,232,1) 10%,rgba(244,255,232,1) 32%,rgba(250,252,247,1) 58%);
+	background: linear-gradient(to bottom, rgba(255,255,255,1) 3%,rgba(244,255,232,1) 10%,rgba(244,255,232,1) 32%,rgba(250,252,247,1) 58%);
+	filter: progid:DXImageTransform.Microsoft.gradient( startColorstr='#ffffff', endColorstr='#fafcf7',GradientType=0 );
+	font-size: 14px;
+	color: #3A403C;
+}
+#installbutton {
+	background-color: #f4ffe8;
+	color: #639b28;
+	border: 1px solid #add383; 
+	border-radius: 2px;
+	padding: 8px 18px;
+	font-size: 15px;
+	cursor: pointer;
+}
+
+
 /* ---- about ----- */
 #less_about {
 	overflow: hidden;
@@ -285,4 +348,40 @@ input[type="checkbox"]{
 	margin-top: 20px;
 	float: right;
 	opacity: 0.5;
+}
+.butn {
+	font-weight: 500;
+	padding: 5px 12px;
+	width: 100%;
+	border-radius: 0px !important;
+	border: 1px solid rgba(184,184,184,1);
+	background: rgb(255,255,255);
+	background: -moz-linear-gradient(top,  rgba(255,255,255,1) 0%, rgba(244,244,244,1) 20%, rgba(255,255,255,1) 100%);
+	background: -webkit-gradient(linear, left top, left bottom, color-stop(0%,rgba(255,255,255,1)), color-stop(20%,rgba(244,244,244,1)), color-stop(100%,rgba(255,255,255,1)));
+	background: -webkit-linear-gradient(top,  rgba(255,255,255,1) 0%,rgba(244,244,244,1) 20%,rgba(255,255,255,1) 100%);
+	background: -o-linear-gradient(top,  rgba(255,255,255,1) 0%,rgba(244,244,244,1) 20%,rgba(255,255,255,1) 100%);
+	background: -ms-linear-gradient(top,  rgba(255,255,255,1) 0%,rgba(244,244,244,1) 20%,rgba(255,255,255,1) 100%);
+	background: linear-gradient(to bottom,  rgba(255,255,255,1) 0%,rgba(244,244,244,1) 20%,rgba(255,255,255,1) 100%);
+	filter: progid:DXImageTransform.Microsoft.gradient( startColorstr='#ffffff', endColorstr='#ffffff',GradientType=0 );
+}
+.butn:hover {
+	box-shadow: inset 0px 0px 8px rgba(218, 155, 136, 0.4);	
+}
+.delbutton {
+	padding: 2px 5px 4px;
+	position: absolute;
+	right: 0;
+	top: 0;
+	background-color: #979797;
+	border: 1px solid #908c8c;
+	color: white;
+	font-weight: bold;
+	font-size: 13px;
+	line-height: 13px;
+	cursor: pointer;
+}
+.delbutton:hover {
+	background-color: #d80000;
+	border: 1px solid #b20c0c;
+	color: white;
 }

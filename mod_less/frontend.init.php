@@ -9,10 +9,8 @@ if (!defined('PHPWCMS_ROOT')) {
 }
 // ----------------------------------------------------------------
 
-
-	
 include_once($phpwcms['modules']['less']['path'].'inc/backend.functions.php');
 	
-CallToCompileLess(true);
+CallToCompileLess();
 	
 ?>
