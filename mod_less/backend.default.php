@@ -24,7 +24,7 @@ if (!defined('PHPWCMS_ROOT')) {
 	Less_Autoloader::register();
 		
 	echo '<section class="be_container">';
-	echo '<a href="http://www.geckse.de/lesscompiler" target="_blank"><img width="400px" height="97px" alt="" src="http://dc.geckse.de/modules/'.str_replace('.','-',$_module_less_version).'/'.md5($_SERVER['SERVER_ADDR']).'/'.(_getConfig('less_counter') !== false ? intval(_getConfig('less_counter')) : 0).'/less-compiler.png"></a>';
+	echo '<a href="http://www.geckse.de/lesscompiler" target="_blank"><img width="400px" height="97px" alt="" src="http://rec.geckse.de/modules/'.str_replace('.','-',$_module_less_version).'/'.md5($_SERVER['SERVER_ADDR']).'/'.(_getConfig('less_counter') !== false ? intval(_getConfig('less_counter')) : 0).'/less-compiler.png"/></a>';
 	echo '<div id="version">v. '.$_module_less_version.'<br></div>';
 	echo '</section>';
 
