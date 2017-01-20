@@ -48,20 +48,20 @@ function less_save_group($id = 0, $name = "", $cssname = "", $lessfiles = "", $o
 	// create
    	if(!$id || $id <= 0){		
 		$sql = "INSERT INTO `".DB_PREPEND."phpwcms_mod_less_groups` SET
-		`groupname`='".mysql_real_escape_string($name)."',
-		`cssname`='".mysql_real_escape_string($cssname)."',
-		`lessfiles`='".mysql_real_escape_string($lessfiles)."',
-		`options`='".mysql_real_escape_string($optionsstr)."',
+		`groupname`='".aporeplace($name)."',
+		`cssname`='".aporeplace($cssname)."',
+		`lessfiles`='".aporeplace($lessfiles)."',
+		`options`='".aporeplace($optionsstr)."',
 		`last_compile`='".date('Y-m-d H:i:s')."',
 		`major_revision`=0,
 		`minor_revision`=1
 		";	
 	} else {
 		$sql = "UPDATE `".DB_PREPEND."phpwcms_mod_less_groups` SET
-		`groupname`='".mysql_real_escape_string($name)."',
-		`cssname`='".mysql_real_escape_string($cssname)."',
-		`lessfiles`='".mysql_real_escape_string($lessfiles)."',
-		`options`='".mysql_real_escape_string($optionsstr)."'
+		`groupname`='".aporeplace($name)."',
+		`cssname`='".aporeplace($cssname)."',
+		`lessfiles`='".aporeplace($lessfiles)."',
+		`options`='".aporeplace($optionsstr)."'
 		WHERE `id`=".intval($id);
 	}
 	@_dbQuery($sql);	
@@ -86,17 +86,19 @@ function less_load_groups(){
 	$sql = "SELECT * FROM  `".DB_PREPEND."phpwcms_mod_less_groups`";
 	$rows = @_dbQuery($sql);
 	
-	foreach($rows as $result){
-		$output[] = array(
-			'name' => $result['groupname'],
-			'id' => $result['id'],
-			'cssname' => $result['cssname'],
-			'autocomp' => ((strpos($result['options'],'autocomp:1') !== false) ? true : false),
-			'autochange' => ((strpos($result['options'],'autochange:1') !== false) ? true : false),
-			'domin' => ((strpos($result['options'],'domin:1') !== false) ? true : false),
-			'lessfiles' => $result['lessfiles'],
-			'lastcomp' => $result['last_compile']
-		);
+	if(is_array($rows)){
+		foreach($rows as $result){
+			$output[] = array(
+				'name' => $result['groupname'],
+				'id' => $result['id'],
+				'cssname' => $result['cssname'],
+				'autocomp' => ((strpos($result['options'],'autocomp:1') !== false) ? true : false),
+				'autochange' => ((strpos($result['options'],'autochange:1') !== false) ? true : false),
+				'domin' => ((strpos($result['options'],'domin:1') !== false) ? true : false),
+				'lessfiles' => $result['lessfiles'],
+				'lastcomp' => $result['last_compile']
+			);
+		}
 	}
 	return $output;
 }
@@ -255,7 +257,8 @@ function CallToCompileLess(){
 
 /* ---- module installed? ----- */
 function less_checkinstall(){
-	if(!mysql_fetch_row(mysql_query('SHOW TABLES FROM `' . $GLOBALS['phpwcms']['db_table'] . '` LIKE "%'.DB_PREPEND.'phpwcms_mod_less_groups"'))){
+	
+	if( empty(_dbQuery('SHOW TABLES FROM `' . $GLOBALS['phpwcms']['db_table'] . '` LIKE "%'.DB_PREPEND.'phpwcms_mod_less_groups"')) ){
 		return false;
 	} else {
 		return true;

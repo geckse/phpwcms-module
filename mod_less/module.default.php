@@ -21,9 +21,9 @@ $_module_fe_init		= true;
 $_module_fe_search		= false;
 $_module_fe_setting		= false;
 
-$_module_less_version = "0.92"; 
+$_module_less_version = "0.921"; 
 
-if(file_get_contents(__DIR__.'/log/log.txt') != "" && function_exists('set_status_message')){
+if(file_exists(__DIR__.'/log/log.txt') && file_get_contents(__DIR__.'/log/log.txt') != "" && function_exists('set_status_message')){
 	set_status_message('Oups! There is a syntax-error in your lessfile. Check Less-Compiler for more information.',"error");
 }
 

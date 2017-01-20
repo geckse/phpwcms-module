@@ -27,7 +27,7 @@ if (!defined('PHPWCMS_ROOT')) {
 		 ) ENGINE = MyISAM";
 		
 	
-		if (mysql_fetch_row(mysql_query('SHOW TABLES FROM ' . $GLOBALS['phpwcms']['db_table'] . ' LIKE "%phpwcms_mod_less_groups"'))) {
+		if (!empty(_dbQuery('SHOW TABLES FROM ' . $GLOBALS['phpwcms']['db_table'] . ' LIKE "%phpwcms_mod_less_groups"'))) {
 	   	} else if(_dbQuery($sql, 'CREATE')) { //create table  
 	    	$errormes .= '<strong>Table:</strong> phpwcms_mod_less_groups successful created.<br>';
 	    	$errormes = '<div class="posbox">'.$errormes.'</div>';

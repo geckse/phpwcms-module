@@ -5,7 +5,7 @@
 			<h3>Compiler:</h3>
 			<div class="logbox">
 			<?php
-				echo str_replace("\n","<br>",file_get_contents($modpath.'log/log.txt'));
+				if(file_exists($modpath.'log/log.txt')) echo str_replace("\n","<br>",file_get_contents($modpath.'log/log.txt'));
 			 ?>
 			</div>
 			
